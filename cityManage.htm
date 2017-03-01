@@ -1,0 +1,168 @@
+<#include "/base/base.htm"/>
+<#macro css>
+    <link rel="stylesheet" href="resource/css/jquery.dataTables.min.css"/>
+    <link rel="stylesheet" href="resource/css/zTreeStyle/zTreeStyle.css"/>
+    <style>
+    	#mySelectedCitys dd{
+    		float: left;
+    		margin: 2px;
+    	}
+    </style>
+</#macro>
+<#macro script>
+	<!-- <script src="resource/js/public/angular/angular.min.js?v=de1dbef188"></script>
+	<script src="resource/js/private/system/object/cityManageApp.js"></script>
+	<script src="resource/js/private/system/object/city-manag/citymanagement.factory.js?v=de1dbef188"></script>
+	<script src="resource/js/private/system/object/city-manag/citymanagement.controller.js?v=de1dbef188"></script>
+	<script src="resource/js/private/system/object/city-list/citylist.controller.js?v=de1dbef188"></script> -->
+	
+	<!-- <script data-main="resource/js/private/system/object/cityManage.js?v=de1dbef188"
+            src="resource/js/require.js"></script> -->
+</#macro>
+<#macro content>
+    <#include "/ftl/ui/navigation.ftl" />
+	    <div class="container-fluid" ng-controller="CityParentCtrl">
+	 		 <input type="hidden" id="selectLevel" ng-bind="selectLevel" ng-init="selectLevel=${selectLevel}">
+	        <div class="cem-city-management" id="city_list" ng-controller="CityListCtrl">
+	        	<table width="100%">
+	            	<thead>
+	                	<tr>
+	                        <th width="150">城市类别</th>
+	                        <th>城市名称</th>
+	                        <th width="180">操作</th>
+	                    </tr>
+	                </thead>
+	                <tbody>
+	                	<tr ng-repeat="cityType in cityTypeList">
+	                		<td>{{cityType.name}}</td>
+	                		
+	                		<td>
+		                        <span ng-repeat="city in cityType.cityList" data-id="{{city.cityId}}">{{city.name}}{{$last? "": ","}}</span>
+		                    </td>
+	                		<td>
+	                			<button class="btn btn-default cem-margin-r" ng-click="editCitysType(cityType.id, cityType.name)">编辑</button>
+	                        	<input type="hidden" ng-bind="cityType.id">
+	    						<input type="hidden" ng-bind="cityType.name">
+	                            <button class="btn btn-danger" style="background:#f48a00;border:1px solid #f48a00;" ng-click="clearCitysType(cityType.id)">清空</button>
+		                     </td>
+	                	</tr>
+	                </tbody>
+	            </table>
+	        </div>
+	        <div class="modal fade" tabindex="-1" role="dialog" id="cem-city-management" ng-controller="CityManagementCtrl">
+                  <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                          <h4 class="modal-title">城市列表</h4>
+                        </div>
+                        <div class="modal-body">
+                        	<h4 class="clearfix">常用城市<button type="button" class="btn btn-default pull-right" id="bigcity_all" ng-click="bigcityAllClick()">全选</button></h4>
+                            <ul class="cem-city-chose_citys cem-margin-b clearfix" id="bigcity">
+                                <li ng-repeat="city in othercity | filter: bigcityfilter" data-id="{{city.id}}">
+                                    <label><input type="checkbox" ng-model="city.isChecked"
+                                                ng-click="hireachyInputClick(city)">{{city.value}}</label>
+                                </li>
+                            </ul>
+                            <div class="clearfix"></div>
+                            <h4 class="clearfix">其它城市<button type="button" class="btn btn-default pull-right" id="othercity_all" ng-click="otherCityAllClick()">全选</button></h4>
+                            <ul id="myTab" class="nav nav-tabs">
+                                <li class="active">
+                                    <a href="#area" data-toggle="tab">
+                                        按行政区域
+                                    </a>
+                                </li>
+                                <li><a href="#letter" data-toggle="tab">按城市首字母</a></li>
+                                <li><a href="#search" data-toggle="tab">按关键字搜索</a></li>
+                            </ul>
+                            <div id="myTabContent" class="tab-content" style="margin-bottom: 10px;">
+                                <div class="tab-pane fade in active" id="area">
+                                    <div class="cem-city-area clearfix">
+                                    	<div class="test">
+                                            <div>省级</div>
+                                            <div>市级</div>
+                                            <div class="xianji-title">县级</div>
+                                        </div>
+                                        <dl>
+                                            <dd ng-repeat="city in othercity | filter: rootfilter" data-id="{{city.id}}" class="{{(city.isActive? 'active': '') + (city.isHalfChecked? ' cem-half-sele':'')}}">
+                                                <input type="checkbox" class="mh10 mv5" ng-model="city.isChecked" 
+                                                ng-click="hireachyInputClick(city)" >
+                                                <span ng-click="hireachyNodeClick(city, 0)">{{city.value}}</span>
+                                            </dd>
+                                        </dl>
+                                        <dl>
+                                            <dd ng-repeat="city in othercity | filter: level1filter" data-id="{{city.id}}" class="{{(city.isActive? 'active': '') + (city.isHalfChecked? ' cem-half-sele':'')}}">
+                                                <input type="checkbox" class="mh10 mv5" ng-model="city.isChecked"
+                                                ng-click="hireachyInputClick(city)" >
+                                                <span ng-click="hireachyNodeClick(city, 1)">{{city.value}}</span>
+                                            </dd>                   
+                                        </dl>
+                                        <dl class="xianji-content">
+                                            <dd ng-repeat="city in othercity | filter: level2filter" data-id="{{city.id}}" class="{{city.isActive? 'active': ''}}">
+                                                <input type="checkbox" class="mh10 mv5" ng-model="city.isChecked"
+                                                ng-click="hireachyInputClick(city)" >
+                                                <span ng-click="hireachyNodeClick(city, 2)">{{city.value}}</span>
+                                            </dd>                                          
+                                        </dl>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="letter">
+                                    <div class="cem-city-letter">
+                                        <div class="cem-letter-26">
+                                            <a href="#" ng-repeat="letter in letters" ng-click="letterClick(letter)" class="{{prefixLetter === letter? 'active': ''}}">{{letter}}</a>
+                                        </div>
+                                        <div class="cem-detail-city clearfix">
+                                            <dl>
+                                                <dd ng-repeat="city in othercity | filter: letterfilter | orderBy: 'value' " data-id="{{city.id}}"  style="{{initCityStyleInArea(city.value)}}">
+                                                    <input type="checkbox" class="mh5" ng-model="city.isChecked"
+                                                ng-click="hireachyInputClick(city)">
+                                                    <span>{{city.value}}</span>
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                    </div>
+                                 </div>
+                                 <div class="tab-pane fade" id="search">
+                                    <div class="cem-city-search">
+                                        <div class="input-group" style="width: 240px;">
+                                            <input class="form-control" ng-model="searchvalue" />
+                                            <span class="input-group-btn"><button class="btn btn-default" type="button" ng-click="searchCity(searchvalue)">搜索</button></span>
+                                        </div>
+                                        <div class="cem-detail-city clearfix">
+                                            <dl>
+                                                <dd ng-repeat="city in othercity | filter: searchfilter | orderBy: 'value' " data-id="{{city.id}}"  style="{{initCityStyleInArea(city.value)}}">
+                                                    <input type="checkbox" class="mh5" ng-model="city.isChecked"
+                                                ng-click="hireachyInputClick(city)">
+                                                    <span>{{city.value}}</span>
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                    </div>
+                                 </div>
+                            </div>
+                            
+                            <div class="clearfix"></div>
+                            <h4 class="clearfix">已选城市</h4>                            
+                            
+                            <div id="mySelectedCitys" class="cem-detail-city clearfix">
+                            	<dl>
+                                     <dd ng-repeat="city in othercity | filter: selectedCityFilter | orderBy: 'value' ">                                        
+                                         {{city.value}}{{$last? "": ","}}
+                                     </dd>
+                                 </dl>
+                            </div>
+                        </div>
+                        <div class="modal-footer cem-margin-t">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                            <button type="button" class="btn btn-warning" id="dialog_ok" ng-click="saveCitys()">确认</button>
+                         </div>
+                    </div>
+                  </div>
+                </div>
+
+            </div>	        
+	    </div>
+</#macro>
+
+<script data-main="resource/js/private/system/object/cityManage.js?v=de1dbef189"
+            src="resource/js/require.js"></script>
